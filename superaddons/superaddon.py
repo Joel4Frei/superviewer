@@ -210,7 +210,7 @@ class SuperViewer(QWidget):
 
         if not os.path.exists(file_path):
             with open(file_path, 'wb') as file:
-                pickle.dump(['enter/any/directory/file.tiff'], file)
+                pickle.dump(['enter/any/folder/directory/'], file)
             
         if not os.path.exists(img_path):
             create_background(img_path)
