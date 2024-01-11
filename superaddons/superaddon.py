@@ -28,10 +28,6 @@ import trackpy as tp
 import threading
 import random
 
-from .review import Marker
-mark = Marker()
-# mark.set_pro_max()
-
 
 
 class SuperViewer(QWidget):
@@ -384,8 +380,8 @@ class SuperViewer(QWidget):
         df_favs_fov_only = df_favs[df_favs['path']==url]
 
 
-        if fov in df_favs_fov_only['fav']:
-            df_favs = df_favs[~((df_favs['fav'] == fov) & (df_favs['path'] == url))]
+        if str(fov) in df_favs_fov_only['fav'].values:
+            df_favs = df_favs[~((df_favs['fav'] == str(fov)) & (df_favs['path'] == url))]
             self.fav_fov_button.setText('Fov' + " \u2606 ")
             
         else:
@@ -529,13 +525,11 @@ class SuperViewer(QWidget):
 
                 df_favs_filtered = df_favs[(df_favs['fav'] == str(i)) & (df_favs['path'] == self.project_path)]
                 
-                print(df_favs_filtered)
-                
                 if not df_favs_filtered.empty:
-                    mark.sig('red')
+
                     fov_comment = f'\u2605 {i}: {comment}'
                 else:
-                    mark.sig('yellow')
+
                     fov_comment = f'{i}: {comment}'  
 
                 self.fov_choice_combox.addItem(fov_comment)
@@ -892,7 +886,7 @@ class SuperViewer(QWidget):
 
   
         if not df_favs_filtered.empty:
-            print(1)
+
             self.fav_fov_button.setText('Fov \u2605')
         else:
 
