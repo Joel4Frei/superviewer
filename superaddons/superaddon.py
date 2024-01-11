@@ -1,6 +1,6 @@
 import typing
 from PyQt5 import QtCore
-from qtpy.QtWidgets import QWidget, QGridLayout, QStyle, QTableWidget, QTableWidgetItem, QTextEdit, QPushButton, QLabel, QLineEdit, QSpinBox, QVBoxLayout, QScrollArea, QComboBox, QFileDialog, QSpacerItem, QFrame, QGroupBox, QCheckBox
+from qtpy.QtWidgets import QWidget, QTabWidget, QGridLayout, QStyle, QTableWidget, QTableWidgetItem, QTextEdit, QPushButton, QLabel, QLineEdit, QSpinBox, QVBoxLayout, QScrollArea, QComboBox, QFileDialog, QSpacerItem, QFrame, QGroupBox, QCheckBox
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QSizePolicy, QWidget
@@ -1622,3 +1622,88 @@ class EnCellClopedia(QWidget):
         self.result_search_table.setColumnWidth(1, 250)  # Set the width of the second column to 200 pixels
         self.result_search_table.setColumnWidth(2, 350)  # Set the width of the third column to 100 pixels
 
+
+
+class Help(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        ''' Title '''
+
+        self.title = QLabel('How to be Super')
+        self.title.setStyleSheet("font-size: 20pt;")
+
+        ''' Tab Widget '''
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet("font-size: 15pt;")
+
+        # Create tabs and add them to the tab widget
+        tab_bioogle = QWidget()
+        tab_comments = QWidget()
+        tab_favorites = QWidget()
+        tab_variables = QWidget()
+
+        self.tabs.addTab(tab_bioogle, "Bioogle")
+        self.tabs.addTab(tab_comments, "Comments")
+        self.tabs.addTab(tab_favorites, "Favorites")
+        self.tabs.addTab(tab_variables, 'Tracks Variables')
+
+        # Content for Tab 1 (tab_bioogle)
+        tab1_layout = QVBoxLayout()
+        tab1_label = QLabel('Bioogle is a search engine within the Super Environment, the EnCellClopedia:\n'
+                            '\n'
+                            'In Bioogle you can look through your comment database. For each Fov and Experiment, a comment can be stored which ultimately is a description that helps to refind experiments/fovs.\n'
+                            'The Bioogle window can be opened by pressing "Bioogle" in the "Super Menu"\n'
+                            'There are 3 different filters available: "Experiment_dir", "Column filter" and "Column to search"\n'
+                            '\n'
+                            '1. The "Experiment_dir" allows to filter for experiment. It can either be entered directly or chosen from the recent used experiments.\n'
+                            '2. The "Column filter" allows to determine if it searches within the comments of the experiment or the fov.\n'
+                            '3. The "Column to search" defines the column in where the input will be searched in. Standard it is set to comment.\n'
+                            '\n'
+                            'Additionally the Bioogle includes a sorting system in which one of all the columns can be sorted by ascending or descending')
+        tab1_label.setStyleSheet("font-size: 14pt;")
+        tab1_layout.addWidget(tab1_label)
+        tab_bioogle.setLayout(tab1_layout)
+
+        # Content for Tab 2 (tab_comments)
+        tab2_layout = QVBoxLayout()
+        tab2_label = QLabel('A comment can be added to each experiment and fov.\n'
+                            '\n'
+                            'As soon as an experiment is loaded, the Edit button for the comment becomes usable.\n'
+                            'Once clicked it allows to write a comment into the field next to it. Clicking again on the button, which is now labeled with "Save", stores the comment and is displayed.\n'
+                            'The same applies to the comments for the fovs. First a fov needs to be loaded and then the button becomes clickable and the comment can be edited and saved.')
+        tab2_label.setStyleSheet("font-size: 14pt;")
+        tab2_layout.addWidget(tab2_label)
+        tab_comments.setLayout(tab2_layout)
+
+        # Content for Tab 3 (tab_favorites)
+        tab3_layout = QVBoxLayout()
+        tab3_label = QLabel('Adding experiments and fovs to favorites is another way to faclitate the search.\n'
+                            '\n'
+                            'At the bottom of the Settings box are 2 buttons located, for the fov and for the experiment. When pressed, the current loaded fov/experiment will be added to favorites.\n'
+                            'There are 2 states: \n'
+                            '\u2605, which indicates a "saved" status and \u2606 which indicates a "not-saved" status.\n'
+                            '\n'
+                            'Additionally, the Stars will be showed on the recent directory list and the fov list of each experiment.')
+        tab3_label.setStyleSheet("font-size: 14pt;")
+        tab3_layout.addWidget(tab3_label)
+        tab_favorites.setLayout(tab3_layout)
+
+        # Content for Tab 4 (tab_variables)
+        tab4_layout = QVBoxLayout()
+        tab4_label = QLabel('The tracks Variables widget allows to define names of files from the experiment, so the Superviewer is able to open them.\n'
+                            'The tracks dataframe contains all the information of the cell tracking, the stimulation and more. If there is no tracks dataframe available, it can be turned off in those settings.\n'
+                            'Other column names of the dataframe such as stimulation intensity, stimulation duration and the Stim fram can be altered and fitted to used dataframe.\n'
+                            '\n'
+                            'The tracks variable widget can be added by pressing "Tracks Variables" in the Super Menu\n'
+                            '\n'
+                            'Without Tracks dataframe, no plots can be created. Yet the program can be still used as a Viewer')
+        tab4_label.setStyleSheet("font-size: 14pt;")
+        tab4_layout.addWidget(tab4_label)
+        tab_variables.setLayout(tab4_layout)
+
+        ''' Main Layout '''
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.title)
+        main_layout.addWidget(self.tabs)
+        self.setLayout(main_layout)
