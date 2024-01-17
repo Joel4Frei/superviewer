@@ -2,6 +2,9 @@ import typing
 from PyQt5 import QtCore
 from qtpy.QtWidgets import QWidget, QTabWidget, QGridLayout, QStyle, QTableWidget, QTableWidgetItem, QTextEdit, QPushButton, QLabel, QLineEdit, QSpinBox, QVBoxLayout, QScrollArea, QComboBox, QFileDialog, QSpacerItem, QFrame, QGroupBox, QCheckBox
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+import matplotlib.image as mpimg
+from matplotlib.figure import Figure
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QSizePolicy, QWidget
 from PyQt5.QtGui import QIcon, QStandardItem
