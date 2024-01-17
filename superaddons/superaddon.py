@@ -851,6 +851,14 @@ class SuperViewer(QWidget):
                     selected_list[group] = []
                     display_selected(group)
 
+            @viewer.bind_key(key = 'a',overwrite=True)
+            def choose_all_layers(viewer = viewer):
+                label_list = selected_list[0]
+                for label in range(stack_particles_layer.data.max() + 1):
+                    if label not in label_list:
+                        label_list.append(label)
+                display_selected(0)
+
             #data = [ID, T, Y, X]
             data = tracks.reset_index()[['particle','frame','x','y']].values.astype(int)
             features = tracks.copy()
@@ -864,7 +872,7 @@ class SuperViewer(QWidget):
             self.set_widgets_status([self.set_stimulation_button,self.stimulation_edit,self.to_plot_button,self.to_plot_box],
                                 [True,True,True,True])
 
-            self.update_label.setText(f'Choose cell-tracks on "Labels layer" with "Pick Mode":\n{nb_groups} avaible groups. Groupkeys: {hotkeys}\nDelete all picked cells using "q"')
+            self.update_label.setText(f'Choose cell-tracks on "Labels layer" with "Pick Mode":\n{nb_groups} avaible groups. Groupkeys: {hotkeys}\nDelete all picked cells using "q"\nChoose all labels using "a".')
 
         else:
             self.update_label.setText(f'FOV loaded\nNo Plots available')
