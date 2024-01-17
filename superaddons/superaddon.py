@@ -12,6 +12,7 @@ from magicgui import magicgui
 import pickle
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
+import copy
 
 
 from skimage.io.collection import alphanumeric_key
@@ -202,6 +203,7 @@ class SuperViewer(QWidget):
         var_path = os.path.join(folder_path, 'variable_file.csv')
         com_path = os.path.join(folder_path, 'comments_file.csv')
         fav_path = os.path.join(folder_path, 'favorites.csv')
+        plt_path = os.path.join(folder_path, 'superplots')
         
 
         if not os.path.exists(folder_path):
@@ -218,6 +220,11 @@ class SuperViewer(QWidget):
         if not os.path.exists(graph_path):
             os.makedirs(graph_path)
         self.standard_graph_path = graph_path
+
+        if not os.path.exists(plt_path):
+            os.makedirs(plt_path)
+
+        self.plt_path = plt_path
 
         if not os.path.exists(var_path):
             variables = {
@@ -397,6 +404,8 @@ class SuperViewer(QWidget):
     def plot(self):
         self.checkboxes = []
         self.saved_plots = []
+        self.plot_list = []
+        self.plots = []
         nb_groups = 4
         selected_list = self.selected_list
         tracks = self.tracks
@@ -446,6 +455,8 @@ class SuperViewer(QWidget):
 
             self.saved_plots.append(plot_widget)
 
+            self.plot_list.append(figure)
+
 
         self.plot_directory_edit = QLineEdit(self.standard_graph_path)
         self.plot_directory_button = QPushButton('Choose directory')
@@ -457,6 +468,10 @@ class SuperViewer(QWidget):
         save_button.clicked.connect(self.save_selected_plots)
         self.figure_layout.addWidget(save_button,(nb_groups+1)*3+1,0,1,2)
 
+        for f in self.plot_list:
+            self.plots.append(copy.deepcopy(f))
+
+        self.saveforplotwindow()
         self.set_widgets_status([self.erase_plots], [True])  
         
 
@@ -955,7 +970,18 @@ class SuperViewer(QWidget):
         self.set_widgets_status([self.exp_info],[False])
         self.exp_info_button.clicked.disconnect()
         self.exp_info_button.clicked.connect(self.exp_info_edit) 
-        self.exp_info_button.setText('Edit') 
+        self.exp_info_button.setText('Edit')
+
+    def saveforplotwindow(self):
+        file_list = os.listdir(self.plt_path)
+
+        # Iterate over the files and delete each one
+        for file_name in file_list:
+            file_path = os.path.join(self.plt_path, file_name)
+            os.remove(file_path)
+
+        for i, fig in enumerate(self.plots):  
+            fig.savefig(os.path.join(self.plt_path, f'super_plot_{i}'), dpi=400)
 
 
 
@@ -1642,11 +1668,13 @@ class Help(QWidget):
         tab_comments = QWidget()
         tab_favorites = QWidget()
         tab_variables = QWidget()
+        tab_plotviewer = QWidget()
 
         self.tabs.addTab(tab_bioogle, "Bioogle")
         self.tabs.addTab(tab_comments, "Comments")
         self.tabs.addTab(tab_favorites, "Favorites")
         self.tabs.addTab(tab_variables, 'Tracks Variables')
+        self.tabs.addTab(tab_plotviewer, 'Super Plot')
 
         # Content for Tab 1 (tab_bioogle)
         tab1_layout = QVBoxLayout()
@@ -1702,8 +1730,90 @@ class Help(QWidget):
         tab4_layout.addWidget(tab4_label)
         tab_variables.setLayout(tab4_layout)
 
+        tab5_layout = QVBoxLayout()
+        tab5_label = QLabel('The Plot Viewer helps to review the plots in a larger scale.\n'
+                            '\n'
+                            'After Loading the plots in Napari, the Plot Viewer can be chosen in the super menu. With the refresh button, the plots from Napari are displayed.')
+        tab5_label.setStyleSheet("font-size: 14pt;")
+        tab5_layout.addWidget(tab5_label)
+        tab_plotviewer.setLayout(tab5_layout)
+
         ''' Main Layout '''
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.title)
         main_layout.addWidget(self.tabs)
         self.setLayout(main_layout)
+
+
+
+class PlotWindow(QWidget):
+    def __init__(self,viewer):
+        super().__init__()
+
+        self.viewer = viewer
+
+        self.layout = QVBoxLayout()
+        self.figure_layout = QVBoxLayout()
+        
+        self.title = QLabel('Super Plots')
+        self.title.setStyleSheet("font-size: 20pt;")
+        self.layout.addWidget(self.title)  
+
+        self.refresh_button = QPushButton('Refresh')
+        self.refresh_button.clicked.connect(self.refresh)
+        self.layout.addWidget(self.refresh_button)
+        
+        self.tabs = QTabWidget()
+
+        self.setLayout(self.layout)
+
+        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        folder_path = os.path.join(script_dir, 'files')
+        self.plt_path = os.path.join(folder_path, 'superplots')
+
+        file_list = os.listdir(self.plt_path)
+        if not file_list:
+            self.refresh()
+
+
+    def refresh(self):
+        file_list = os.listdir(self.plt_path)
+
+        # Clear existing tabs
+        self.tabs.clear()
+
+        for i, plt_file in enumerate(file_list):
+            tab = QWidget()
+            tab_layout = QVBoxLayout()
+            self.tabs.addTab(tab, f"Plot {i}")
+
+            plt_path = os.path.join(self.plt_path, plt_file)
+
+            # Create a Matplotlib figure without axes
+            figure = Figure(figsize=(8, 4), dpi=400)
+            ax = figure.add_axes([0, 0, 1, 1])  # Add axes that cover the whole figure
+
+            # Load the PNG file using Matplotlib's mpimg module
+            img = mpimg.imread(plt_path)
+
+            # Display the image on the Matplotlib axes
+            ax.imshow(img)
+            ax.axis('off')  # Turn off the axes
+
+            # Embed the Matplotlib figure into a PyQt widget
+            canvas = FigureCanvas(figure)
+            canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            canvas.updateGeometry()
+
+            # Add the Matplotlib canvas to the tab layout
+            tab_layout.addWidget(canvas)
+
+            # Add Matplotlib NavigationToolbar for zooming and panning
+            toolbar = NavigationToolbar(canvas, self)
+            tab_layout.addWidget(toolbar)
+
+            tab.setLayout(tab_layout)
+
+        # Add the tabs to the main layout
+        self.layout.addWidget(self.tabs)
+        self.setLayout(self.layout)
