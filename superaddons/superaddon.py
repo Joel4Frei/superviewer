@@ -1408,7 +1408,6 @@ class VariableData(QWidget):
 
 
 
-
 class EnCellClopedia(QWidget):
     def __init__(self):
         super().__init__()
@@ -1416,6 +1415,7 @@ class EnCellClopedia(QWidget):
         ''' Title '''
 
         self.title = QLabel('EnCellClopedia')
+        self.title.setStyleSheet("font-size: 20pt;")  
 
 
         ''' Comment search '''
@@ -1440,6 +1440,10 @@ class EnCellClopedia(QWidget):
         self.exp_filter_edit = QLineEdit()
         self.exp_filter_edit.setPlaceholderText('Add exp directory for filtering')
 
+        self.fav_only_label = QLabel('Favorites Only')
+        self.fav_only_button = QPushButton('False')
+        self.fav_only_button.clicked.connect(self.fav_alter)
+        self.fav_only = False
 
         self.exp_fov_filter_label = QLabel('Column filter')
         self.exp_fov_filter_box = QComboBox()
@@ -1454,9 +1458,6 @@ class EnCellClopedia(QWidget):
 
         self.result_search_title = QLabel('Bioogle Results')
 
-        self.result_sort_button = QPushButton('Sort')
-        self.result_sort_button.clicked.connect(self.sorting)
-
         self.result_search_table = QTableWidget()
 
 
@@ -1469,7 +1470,7 @@ class EnCellClopedia(QWidget):
 
         self.search_layout.addWidget(self.search_title,0,0,1,3)
         self.search_layout.addWidget(self.search_edit,1,0,1,2)
-        self.search_layout.addWidget(self.search_button,1,2,1,1)
+        self.search_layout.addWidget(self.search_button,1,2,1,2)
 
         self.search_group_box.setLayout(self.search_layout)
 
@@ -1483,11 +1484,14 @@ class EnCellClopedia(QWidget):
         self.filter_layout.addWidget(self.exp_filter_box,2,0,1,1)
         self.filter_layout.addWidget(self.exp_filter_edit,3,0,1,1)
 
-        self.filter_layout.addWidget(self.exp_fov_filter_label,1,1,1,1)
-        self.filter_layout.addWidget(self.exp_fov_filter_box,2,1,1,1)
+        self.filter_layout.addWidget(self.fav_only_label,1,1,1,1)
+        self.filter_layout.addWidget(self.fav_only_button,2,1,1,1)
 
-        self.filter_layout.addWidget(self.col_to_search_filter_label,1,2,1,1)
-        self.filter_layout.addWidget(self.col_to_search_filter_box,2,2,1,1)
+        self.filter_layout.addWidget(self.exp_fov_filter_label,1,2,1,1)
+        self.filter_layout.addWidget(self.exp_fov_filter_box,2,2,1,1)
+
+        self.filter_layout.addWidget(self.col_to_search_filter_label,1,3,1,1)
+        self.filter_layout.addWidget(self.col_to_search_filter_box,2,3,1,1)
  
         self.filter_group_box.setLayout(self.filter_layout)
 
@@ -1496,7 +1500,6 @@ class EnCellClopedia(QWidget):
         self.result_search_group_box = QGroupBox('Results')
 
         self.result_search_layout.addWidget(self.result_search_title,0,0,1,4) 
-        self.result_search_layout.addWidget(self.result_sort_button,0,4,1,1)
         self.result_search_layout.addWidget(self.result_search_table,1,0,1,5)          
         
         self.result_search_group_box.setLayout(self.result_search_layout)
@@ -1513,6 +1516,7 @@ class EnCellClopedia(QWidget):
 
         script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         folder_path = os.path.join(script_dir, 'files')
+        self.fav_path = os.path.join(folder_path, 'favorites.csv')
         self.com_path = os.path.join(folder_path, 'comments_file.csv')
 
         available_cols = []
@@ -1546,53 +1550,13 @@ class EnCellClopedia(QWidget):
         self.exp_filter_box.addItem('None')
         self.exp_filter_box.addItems(self.recent_files)
 
-
-    def sorting(self):
-
-        df = self.search_result_df
-        col_count = len(df.columns)
-
-        self.sorting_factor += 1
-        if self.sorting_factor == col_count*2+1 or self.sorting_factor > col_count*2:
-            self.sorting_factor = 0
-
-        if self.sorting_factor % 2 == 0 and self.sorting_factor != 0:
-            if col_count % 2 == 0:
-                if self.sorting_factor < col_count:
-                    way = True
-                else:
-                    way = False
-            else:
-                way = True
-
-        elif self.sorting_factor % 2 == 1:
-            if col_count % 2 == 0:
-                if self.sorting_factor < col_count:
-                    way = False
-                else:
-                    way = True
-            else:
-                way = False
-        
-        if self.sorting_factor != 0:
-            col_num = self.sorting_factor % col_count
-            df = df.sort_values(by=df.columns[col_num], ascending=way)
-
-            if way:
-                button_text = df.columns[col_num] + ' ascending'
-            else: 
-                button_text = df.columns[col_num] + ' descending'
-
+    def fav_alter(self):
+        if self.fav_only:
+            self.fav_only_button.setText('False')
+            self.fav_only = False
         else:
-            button_text = ''
-        
-
-        
-        self.result_sort_button.setText(f'Sort {button_text}')
-        
-        self.df_to_table(df)
-
-        
+            self.fav_only_button.setText('True')
+            self.fav_only = True
 
 
 
@@ -1601,12 +1565,14 @@ class EnCellClopedia(QWidget):
 
     def searching(self):
 
+        df_favs = pd.read_csv(self.fav_path)
         df_com = pd.read_csv(self.com_path)
         search_word = self.search_edit.text()
 
         search_column = self.col_to_search_filter_box.currentText()
         search_type = self.exp_fov_filter_box.currentText()
         search_exp = self.exp_filter_edit.text()
+        search_fav = self.fav_only
 
         if search_type == 'Experiment':
 
@@ -1630,6 +1596,24 @@ class EnCellClopedia(QWidget):
 
             search_result_df = search_result_df[search_result_df['experiment_dir'] == search_exp]
 
+        if search_fav:
+            fav_rows = []
+            for index, row in search_result_df.iterrows():
+                fav_row = None
+                experiment_dir = row['experiment_dir']
+                fov_num = row['fov_num']
+
+                if fov_num == 'exp_description':
+                    fav_row = df_favs[(df_favs['fav'] == experiment_dir)]
+                else:
+                    fav_row = df_favs[(df_favs['path'] == experiment_dir) & (df_favs['fav'] == str(fov_num))]
+
+                if fav_row is not None and not fav_row.empty:
+                    fav_rows.append(row)
+
+            search_result_df = pd.DataFrame(fav_rows)
+
+
 
         self.df_to_table(search_result_df)
 
@@ -1642,22 +1626,43 @@ class EnCellClopedia(QWidget):
         self.result_search_table.clearContents()
         self.result_search_table.setRowCount(0)
 
+        df_favs = pd.read_csv(self.fav_path)
+        
+
         df_rows = search_result_df.shape[0]
         df_cols = search_result_df.shape[1]
 
         self.result_search_table.setRowCount(df_rows)
-        self.result_search_table.setColumnCount(df_cols)
-        self.result_search_table.setHorizontalHeaderLabels(('Experiment Dir','FOV','Comment'))
+        self.result_search_table.setColumnCount(df_cols+1)
+        self.result_search_table.setHorizontalHeaderLabels(('Experiment Dir','FOV','Comment','Favorite'))
 
+        
         for row_index, row in enumerate(search_result_df.itertuples(index=False)):
-            # Loop over the columns of the row
+   
+            experiment_dir = row[0]  # Assuming 'Experiment Dir' is the first column in search_result_df
+            fov_num = row[1]  # Assuming 'FOV' is the second column in search_result_df
+
+            fav_row = None
+            if fov_num == 'exp_description':
+                fav_row = df_favs[(df_favs['fav'] == experiment_dir)]
+
+            else:
+                fav_row = df_favs[(df_favs['path'] == experiment_dir) & (df_favs['fav'] == str(fov_num))]  
+
+            favorite_sign = '\u2605' if not fav_row.empty else ''
+            fav_sign = QTableWidgetItem(str(favorite_sign))
+
+
             for col_index, value in enumerate(row):
-                # Set values in the QTableWidget
-                self.result_search_table.setItem(row_index, col_index, QTableWidgetItem(str(value)))
+                item = QTableWidgetItem(str(value))
+                self.result_search_table.setItem(row_index, col_index, item)
+
+            self.result_search_table.setItem(row_index, df_cols, fav_sign)
 
         self.result_search_table.setColumnWidth(0, 400)  # Set the width of the first column to 150 pixels
         self.result_search_table.setColumnWidth(1, 250)  # Set the width of the second column to 200 pixels
         self.result_search_table.setColumnWidth(2, 350)  # Set the width of the third column to 100 pixels
+        self.result_search_table.setColumnWidth(3, 75)  # Set the width of the third column to 100 pixels
 
 
 
